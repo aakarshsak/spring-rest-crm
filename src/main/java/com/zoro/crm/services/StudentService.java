@@ -1,48 +1,55 @@
 package com.zoro.crm.services;
 
-import com.zoro.crm.dao.StudentDao;
+import com.zoro.crm.exceptions.StudentNotFoundException;
 import com.zoro.crm.models.Student;
+import com.zoro.crm.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StudentService {
 
-    private StudentDao studentDao;
+    private StudentRepository studentRepository;
 
     @Autowired
-    public StudentService(StudentDao studentDao) {
-        this.studentDao = studentDao;
+    public StudentService(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
     }
 
-    @Transactional
     public void addStudent(Student student) {
-        studentDao.save(student);
+        studentRepository.save(student);
     }
 
-    @Transactional
     public void addMultipleStudents(List<Student> students) {
-        students.forEach(student -> studentDao.save(student));
+        students.forEach(student -> studentRepository.save(student));
     }
 
     public Student getStudent(int id) {
-        return studentDao.getById(id);
+
+        Optional<Student> studentOptional = studentRepository.findById(id);
+
+        if(!studentOptional.isPresent()) {
+            throw new StudentNotFoundException(id + " - does not exist in the database!");
+        }
+
+        return studentOptional.get();
     }
 
     public List<Student> getAllStudents() {
-        return studentDao.getAll();
+        return studentRepository.findAll();
     }
 
-    @Transactional
     public void updateStudent(Student student) {
-        studentDao.save(student);
+        studentRepository.save(student);
     }
 
-    @Transactional
     public Student deleteStudent(int id) {
-        return studentDao.deleteById(id);
+        Student student = getStudent(id);
+        studentRepository.delete(student);
+        return student;
     }
 }
